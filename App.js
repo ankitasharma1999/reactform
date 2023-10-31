@@ -1,24 +1,5 @@
-//import Comp from "./form";
-
-//import Counter from './counter';
-//import Display from './parentdis';
-
-/*function App() {
-  const [count, setCount] = useState(0);*/
- // function App() {
-//  return (
-  //  <div>
-     // {/*<Counter count={count} setCount={setCount} />
-     // <Display count={count} />*/}
-     // <Comp/>
-   // </div>
-   // )
-   // }
-//
-
-//export default App;
-
 import React, { useEffect, useState } from 'react';
+
 function App() {
   const initialvalue = {
     firstName: "",
@@ -32,6 +13,7 @@ function App() {
   const [person, setPerson] = useState(initialvalue);
   const [people, setPeople] = useState([]);
   const [deletedPersonID, setDeletedPersonID] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     const getFromLocal = JSON.parse(localStorage.getItem('people'));
@@ -72,22 +54,40 @@ function App() {
       return;
     }
 
-    const newPerson = { ...person, id: generateRandomID() };
+    if (isEditing) {
+      // If we're editing, update the existing entry.
+      const updatedPeople = people.map(existingPerson =>
+        existingPerson.id === person.id ? person : existingPerson
+      );
+      setPeople(updatedPeople);
+      setIsEditing(false);
+      setinLocal(updatedPeople); // Save the updated data to local storage.
+    } else {
+      // If not editing, create a new entry.
+      const newPerson = { ...person, id: generateRandomID() };
+      setPeople(prev => [...prev, newPerson]);
+      setinLocal([...people, newPerson]); // Save the updated data to local storage.
+    }
 
-    setPeople(prev => [...prev, newPerson]);
     setPerson(initialvalue);
-    setinLocal();
   }
 
   const handleDelete = (id) => {
     setDeletedPersonID(id);
     const updatedPeople = people.filter(person => person.id !== id);
     setPeople(updatedPeople);
-    setinLocal();
+    setIsEditing(false); // Exit editing mode if deleting.
+    setinLocal(updatedPeople); // Save the updated data to local storage.
   }
 
-  function setinLocal() {
-    localStorage.setItem("people", JSON.stringify(people));
+  const handleEdit = (id) => {
+    const personToEdit = people.find(person => person.id === id);
+    setPerson(personToEdit);
+    setIsEditing(true);
+  }
+
+  function setinLocal(updatedData) {
+    localStorage.setItem("people", JSON.stringify(updatedData));
   }
 
   return (
@@ -133,7 +133,7 @@ function App() {
             <label htmlFor="history">History</label>
           </div><br></br>
         </div>
-        <button type="submit">Submit</button>
+        <button type="submit">{isEditing ? "Edit" : "Submit"}</button>
       </form>
 
       {deletedPersonID && (
@@ -171,6 +171,7 @@ function App() {
                   <td>{Array.isArray(val.subjects) ? val.subjects.join(', ') : val.subjects}</td>
                   <td>{val.id}</td>
                   <td>
+                    <button onClick={() => handleEdit(val.id)}>Edit</button>
                     <button onClick={() => handleDelete(val.id)}>Delete</button>
                   </td>
                 </tr>
