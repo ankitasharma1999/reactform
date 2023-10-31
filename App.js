@@ -23,7 +23,11 @@ function App() {
   const handleChange = (e) => {
     const name = e.target.name;
     const value = e.target.type === 'checkbox' ? getUpdatedSubjects(name, e) : e.target.value;
-    setPerson(prev => ({ ...prev, [name]: value }));
+
+    // Only update the fields you want to edit (first name, last name, and subjects).
+    if (name === 'firstName' || name === 'lastName' || name === 'subjects') {
+      setPerson(prev => ({ ...prev, [name]: value }));
+    }
   }
 
   const getUpdatedSubjects = (name, e) => {
